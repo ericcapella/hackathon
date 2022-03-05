@@ -4,12 +4,14 @@ import AppRouter from "./app/routes";
 import {connectToDatabase} from "./app/mongo";
 import { configKafkaClient, consumeMessages, KafkaConsumer, topicInitialization, TweetSentimentEvent } from '@hackathon1021/kafka';
 import { Tweet } from './app/models/tweet.model';
+import { createTweet } from './app/service/tweet.service';
 const app = express();
 app.use(express.json())
 app.use(cors());
 
 app.use('/',AppRouter());
 
+export const kafka = configKafkaClient("express-server");
 
 
 const start = async () => {
@@ -18,13 +20,9 @@ const start = async () => {
   await connectToDatabase();
 
 
-  const kafka = configKafkaClient("express-server");
 
   const consumer:KafkaConsumer<TweetSentimentEvent> = async (kafka, event: TweetSentimentEvent) => {
-    const analyzedTweet = new Tweet(event)
-    //TODO asegurarnos que event es un objecto con un solo tweet
-
-    await analyzedTweet.save();
+    await createTweet(event);
 
   };
 
